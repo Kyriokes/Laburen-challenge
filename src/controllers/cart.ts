@@ -88,10 +88,23 @@ export async function updateItem(request: Request, env: Env): Promise<Response> 
 	}
 }
 
-export async function getCart(request: Request, env: Env, id: string): Promise<Response> {
+export async function getCart(request: Request, env: Env): Promise<Response> {
+	let cartId: string | undefined;
+
+	try {
+		const body = (await request.json()) as any;
+		cartId = body.cartId;
+	} catch (e) {
+		return Response.json({ success: false, error: "Invalid JSON body" }, { status: 400 });
+	}
+
+	if (!cartId) {
+		return Response.json({ success: false, error: "Missing cartId" }, { status: 400 });
+	}
+
 	try {
 		// Verificar carrito
-		const cart = await env.shop_db.prepare("SELECT * FROM carts WHERE id = ?").bind(id).first();
+		const cart = await env.shop_db.prepare("SELECT * FROM carts WHERE id = ?").bind(cartId).first();
 		if (!cart) {
 			return Response.json({ success: false, error: "Cart not found" }, { status: 404 });
 		}
@@ -106,7 +119,7 @@ export async function getCart(request: Request, env: Env, id: string): Promise<R
         WHERE ci.cart_id = ?
       `
 			)
-			.bind(id)
+			.bind(cartId)
 			.all();
 
 		return Response.json({

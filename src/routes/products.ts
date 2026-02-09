@@ -9,13 +9,9 @@ export async function productsRouter(request: Request, env: Env): Promise<Respon
 		return productsController.listProducts(request, env);
 	}
 
-	// GET /products/:id
-	// Example: /products/123
-	if (url.pathname.startsWith("/products/") && request.method === "GET") {
-		const id = url.pathname.split("/")[2];
-		if (id && id !== "list") {
-			return productsController.getProductDetails(request, env, id);
-		}
+	// POST /products/get (Detalle)
+	if (url.pathname === "/products/get" && request.method === "POST") {
+		return productsController.getProductDetails(request, env);
 	}
 
 	return new Response("Products endpoint not found", { status: 404 });

@@ -4,7 +4,7 @@ import * as cartController from "../controllers/cart";
 export async function cartRouter(request: Request, env: Env): Promise<Response> {
 	const url = new URL(request.url);
 
-	// POST /cart
+	// POST /cart (Crear)
 	if (url.pathname === "/cart" && request.method === "POST") {
 		return cartController.createCart(request, env);
 	}
@@ -19,12 +19,9 @@ export async function cartRouter(request: Request, env: Env): Promise<Response> 
 		return cartController.updateItem(request, env);
 	}
 
-	// GET /cart/:id
-	if (url.pathname.startsWith("/cart/") && request.method === "GET") {
-		const id = url.pathname.split("/")[2];
-		if (id && id !== "add" && id !== "update") {
-			return cartController.getCart(request, env, id);
-		}
+	// POST /cart/get (Ver)
+	if (url.pathname === "/cart/get" && request.method === "POST") {
+		return cartController.getCart(request, env);
 	}
 
 	return new Response("Cart endpoint not found", { status: 404 });
