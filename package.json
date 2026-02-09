@@ -1,5 +1,5 @@
 {
-	"name": "yellow-pond-67d9",
+	"name": "laburen-challenge",
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
@@ -7,13 +7,15 @@
 		"dev": "wrangler dev",
 		"start": "wrangler dev",
 		"test": "vitest",
-		"cf-typegen": "wrangler types"
+		"cf-typegen": "wrangler types",
+		"seed": "node scripts/convert_xlsx_to_sql.js && wrangler d1 execute shop_db --local --file=./seed_products.sql"
 	},
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.12.4",
 		"@types/node": "^25.2.2",
 		"typescript": "^5.5.2",
 		"vitest": "~3.2.0",
-		"wrangler": "^4.63.0"
+		"wrangler": "^4.63.0",
+		"xlsx": "^0.18.5"
 	}
 }
