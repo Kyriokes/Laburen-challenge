@@ -1,39 +1,49 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Bind resources to your worker in `wrangler.jsonc`. After adding bindings, a type definition for the
- * `Env` object can be regenerated with `npm run cf-typegen`.
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+import * as products from "./controllers/products";
+import * as cart from "./controllers/cart";
 
 export default {
 	async fetch(request: Request, env: Env): Promise<Response> {
 		const url = new URL(request.url);
 
-		// Health check simple
-		if (url.pathname === "/" && request.method === "GET") {
-			return new Response("MCP running OK");
-		}
-
-		// MCP: list products
-		if (url.pathname === "/list_products" && request.method === "POST") {
-			try {
-				const { results } = await env.shop_db.prepare("SELECT * FROM products").all();
-				return Response.json({
-					success: true,
-					products: results,
-				});
-			} catch (e: any) {
-				return Response.json({ success: false, error: e.message }, { status: 500 });
+		try {
+			// 1. Health Check
+			if (url.pathname === "/" || url.pathname === "/health") {
+				return new Response("MCP running OK");
 			}
-		}
 
-		return new Response("Not Found", { status: 404 });
+			// 2. Products
+			if (url.pathname === "/products/list" && request.method === "POST") {
+				return products.listProducts(request, env);
+			}
+			// Example: /products/123
+			if (url.pathname.startsWith("/products/") && request.method === "GET") {
+				const id = url.pathname.split("/")[2];
+				if (id && id !== "list") {
+					return products.getProductDetails(request, env, id);
+				}
+			}
+
+			// 3. Cart
+			if (url.pathname === "/cart" && request.method === "POST") {
+				return cart.createCart(request, env);
+			}
+			if (url.pathname === "/cart/add" && request.method === "POST") {
+				return cart.addItem(request, env);
+			}
+			if (url.pathname === "/cart/update" && request.method === "POST") {
+				return cart.updateItem(request, env);
+			}
+			// Example: /cart/5
+			if (url.pathname.startsWith("/cart/") && request.method === "GET") {
+				const id = url.pathname.split("/")[2];
+				if (id && id !== "add" && id !== "update") {
+					return cart.getCart(request, env, id);
+				}
+			}
+
+			return new Response("Not Found", { status: 404 });
+		} catch (e: any) {
+			return Response.json({ success: false, error: e.message }, { status: 500 });
+		}
 	},
 };
-
