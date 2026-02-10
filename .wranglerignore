@@ -1,0 +1,12 @@
+node_modules/
+.git/
+.vscode/
+.trae/
+docs/
+scripts/
+test/
+products.xlsx
+*.sql
+README.md
+wrangler.toml
+.dev.vars
