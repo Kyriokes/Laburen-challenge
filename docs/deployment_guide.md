@@ -29,10 +29,16 @@ El objetivo es que los mensajes de WhatsApp lleguen a Chatwoot, y Chatwoot se lo
 2.  Busca la sección "Integrations" o "CRM".
 3.  Ingresa:
     *   **Chatwoot Server URL**: `https://chatwootchallenge.laburen.com/`
-    *   **Platform App Token**: `7YRVVb8JzvDG8yfaVkZAQ48j` (Dato del challenge).
+    *   **Platform App Token**: (Dato en el challenge).
     *   **Inbox Token**: El token del inbox que creaste en el paso B.
 
 ## 3. Verificación Final
 1.  Envía un "Hola" desde tu WhatsApp real al número de Twilio.
 2.  Debería aparecer en Chatwoot.
 3.  El Agente (si está encendido en Laburen) debería leerlo, "pensar" y responderte por WhatsApp.
+
+## 4. Nota sobre Costos y Testing (Web Standalone)
+Debido a que la integración con Twilio tiene un costo (~$20 USD) y requiere aprobación, se ha optado por utilizar la interfaz web directa de Laburen para las pruebas del agente.
+
+*   **URL de Prueba**: `https://dashboard.laburen.com/@sales_pro`
+*   **Estado de Chatwoot**: Aunque el Agente está configurado para conectarse a Chatwoot (backend), el canal de entrada (Inbox) de WhatsApp **no está activo** ni conectado a Twilio para evitar costos externos. Se utilizará el "Web Standalone" para verificar la lógica conversacional y las Actions.

@@ -2,6 +2,60 @@
 
 Solución completa para el desafío técnico de **AI Engineer**. Este repositorio contiene el backend (Model Context Protocol) que potencia a un agente de ventas capaz de buscar productos y gestionar carritos de compra vía WhatsApp.
 
+## 📐 Fase Conceptual · Diseño del Agente de IA
+
+Esta sección describe la lógica de interacción diseñada para que el agente maneje ventas de manera autónoma.
+
+### 1. Diagrama de Flujo de Interacción
+El siguiente diagrama ilustra cómo el agente orquesta las herramientas (MCP) para satisfacer la intención del usuario, desde la exploración hasta la gestión del carrito.
+
+```mermaid
+sequenceDiagram
+    participant U as Usuario
+    participant A as Agente IA
+    participant API as MCP Backend
+    participant DB as D1 Database
+
+    Note over U, A: Fase 1: Exploración
+    U->>A: "Busco pantalones deportivos"
+    A->>API: POST /products/list { "search": "pantalón deportivo" }
+    API->>DB: SELECT * FROM products...
+    DB-->>API: [ID: 5, ID: 12...]
+    API-->>A: Lista de productos
+    A-->>U: Muestra opciones con IDs y precios
+
+    Note over U, A: Fase 2: Gestión de Carrito
+    U->>A: "Quiero 2 unidades del ID 5"
+    alt Carrito Nuevo
+        A->>API: POST /cart { }
+        API-->>A: { "cartId": 101 }
+    end
+    A->>API: POST /cart/add { "cartId": 101, "productId": 5, "qty": 2 }
+    API->>DB: INSERT INTO cart_items...
+    DB-->>API: OK
+    API-->>A: Success
+    A-->>U: "Agregado. ¿Algo más?"
+
+    Note over U, A: Fase 3: Edición (Opcional)
+    U->>A: "Mejor solo quiero 1"
+    A->>API: POST /cart/update { "cartId": 101, "productId": 5, "qty": 1 }
+    API-->>A: Updated
+    A-->>U: "Listo, actualicé tu carrito."
+```
+
+### 2. Definición de Endpoints (MCP)
+Estas son las **Actions** que el agente tiene disponibles para interactuar con el sistema.
+
+| Endpoint | Método | Descripción | Body Esperado (JSON) |
+|----------|--------|-------------|----------------------|
+| `/products/list` | POST | Busca productos en el catálogo. | `{ "search": "keyword" }` |
+| `/cart` | POST | Inicializa una nueva sesión de compra. | `{}` |
+| `/cart/add` | POST | Agrega ítems al carrito activo. | `{ "cartId": 1, "productId": 5, "qty": 2 }` |
+| `/cart/get` | POST | Obtiene el estado actual del carrito y total. | `{ "cartId": 1 }` |
+| `/cart/update` | POST | Modifica cantidad o elimina (si qty=0). | `{ "cartId": 1, "productId": 5, "qty": 1 }` |
+
+---
+
 ## 🚀 Arquitectura
 
 *   **Runtime**: Cloudflare Workers (Serverless).
@@ -63,4 +117,5 @@ Para conectar este backend con la inteligencia artificial:
 3.  Pega el **System Prompt** sugerido en la configuración del modelo.
 
 ---
-Hecho con ⚡️ y TypeScript.
+
+

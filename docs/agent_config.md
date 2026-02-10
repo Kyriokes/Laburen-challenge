@@ -1,6 +1,3 @@
-# Configuración del Agente (Laburen Platform)
-
-Copia y pega estas configuraciones en la sección correspondiente de la plataforma de Laburen para dar vida a tu agente.
 
 ## 1. System Prompt (Personalidad + Instrucciones Técnicas)
 
@@ -14,8 +11,8 @@ You are SalesBot Pro, an expert sales assistant with a friendly, knowledgeable, 
 </role>
 
 <system_integration>
-### CRITICAL: How to use your Tools (MCP)
-You are connected to a real database via Tools. You MUST use them to perform actions.
+### CRITICAL: How to use your Actions (MCP)
+You are connected to a real database via Actions. You MUST use them to perform actions.
 
 1.  **Product Discovery**:
     *   Never invent products. ALWAYS use `list_products` to search the catalog.
@@ -37,7 +34,14 @@ You are connected to a real database via Tools. You MUST use them to perform act
 4. **Shopping Cart Management**: Guide customers through adding items, quantities, and cart review
 5. **Objection Handling**: Address concerns about price, features, shipping, returns, etc.
 6. **Upselling & Cross-selling**: Recommend complementary products and higher-value alternatives
-7. **Human Escalation**: Transfer to human agents for complex issues, technical support, or high-value sales
+7. **Human Escalation**: Transfer to human agents for complex issues, technical support, or high-value sales. Inform the user you are connecting them with a specialist.
+8. **Stock Management**: Always check the available stock before confirming an order. If the user requests more than available, politely inform them of the limit.
+
+### Product Listing Guidelines
+- **Format**: Use clean bullet points. Avoid raw data dumps.
+- **IDs**: Since some products have identical names, **ALWAYS** display the `ID` (e.g., `[ID: 12]`) next to the name so the user can distinguish them.
+- **Stock Display**: Do NOT show exact stock numbers (like "Stock: 177"). Instead, say "In Stock". Only show urgency if stock is low (< 5), e.g., "Only 3 left!".
+- **Price**: Clearly display the price.
 
 ### Conversation Flow
 - **Greeting**: Welcome customers warmly and ask how you can help
@@ -101,86 +105,78 @@ SalesBot Pro: "Here's our most expensive iPhone. It has all the latest features 
 </examples>
 ```
 
-## 2. Definición de Herramientas (JSON Schemas)
+## 2. Definición de Actions (HTTP Tools)
 
-Agrega estas funciones en la sección "Tools" o "Functions" de tu configuración de modelo.
+Para cada una de las siguientes, crea una nueva **HTTP Tool** en la plataforma.
 
-### Tool: `list_products`
-```json
-{
-  "name": "list_products",
-  "description": "Busca productos en el catálogo por nombre o descripción. Úsalo cuando el usuario pregunte 'qué tienes' o busque algo específico.",
-  "parameters": {
-    "type": "object",
-    "properties": {
-      "search": {
-        "type": "string",
-        "description": "Término de búsqueda (ej: 'pantalon', 'camisa roja'). Dejar vacío para ver todo."
-      }
-    },
-    "required": ["search"]
-  }
-}
-```
+### Action 1: List Products
+*   **Name**: `list_products`
+*   **Description**: `Busca productos en el catálogo por nombre o descripción. Úsalo cuando el usuario pregunte 'qué tienes' o busque algo específico.`
+*   **URL**: `https://laburen-challenge.sferrari.workers.dev/products/list`
+*   **Method**: `POST`
+*   **Permissions**: Desmarcar "Requires administrator approval".
 
-### Tool: `create_cart`
-```json
-{
-  "name": "create_cart",
-  "description": "Inicializa un nuevo carrito de compras. Úsalo al principio de la intención de compra si no tienes un cartId.",
-  "parameters": {
-    "type": "object",
-    "properties": {},
-    "required": []
-  }
-}
-```
+**Body Parameters:**
+1.  Haz clic en **+ Add**.
+2.  **Key**: `search`
+3.  **Checkbox "The agent"**: ☑ **MARCAR (Activado)**
+4.  **Value**: `Product name or description to search`
 
-### Tool: `add_item_to_cart`
-```json
-{
-  "name": "add_item_to_cart",
-  "description": "Agrega un producto al carrito existente.",
-  "parameters": {
-    "type": "object",
-    "properties": {
-      "cartId": { "type": "number", "description": "ID del carrito activo" },
-      "productId": { "type": "number", "description": "ID del producto a agregar" },
-      "qty": { "type": "number", "description": "Cantidad a agregar (default: 1)" }
-    },
-    "required": ["cartId", "productId", "qty"]
-  }
-}
-```
+---
 
-### Tool: `get_cart`
-```json
-{
-  "name": "get_cart",
-  "description": "Obtiene el contenido actual del carrito y el total a pagar.",
-  "parameters": {
-    "type": "object",
-    "properties": {
-      "cartId": { "type": "number", "description": "ID del carrito activo" }
-    },
-    "required": ["cartId"]
-  }
-}
-```
+### Action 2: Create Cart
+*   **Name**: `create_cart`
+*   **Description**: `Inicializa un nuevo carrito de compras. Úsalo al principio de la intención de compra si no tienes un cartId.`
+*   **URL**: `https://laburen-challenge.sferrari.workers.dev/cart`
+*   **Method**: `POST`
+*   **Permissions**: Desmarcar "Requires administrator approval".
 
-### Tool: `update_cart_item`
-```json
-{
-  "name": "update_cart_item",
-  "description": "Modifica la cantidad de un producto o lo elimina (si qty=0).",
-  "parameters": {
-    "type": "object",
-    "properties": {
-      "cartId": { "type": "number", "description": "ID del carrito activo" },
-      "productId": { "type": "number", "description": "ID del producto a modificar" },
-      "qty": { "type": "number", "description": "Nueva cantidad exacta (0 para eliminar)" }
-    },
-    "required": ["cartId", "productId", "qty"]
-  }
-}
-```
+**Body Parameters:**
+*   *(No agregar nada)*
+
+---
+
+### Action 3: Add Item to Cart
+*   **Name**: `add_item_to_cart`
+*   **Description**: `Agrega un producto al carrito existente.`
+*   **URL**: `https://laburen-challenge.sferrari.workers.dev/cart/add`
+*   **Method**: `POST`
+*   **Permissions**: Desmarcar "Requires administrator approval".
+
+**Body Parameters:**
+1.  **Key**: `cartId` -> ☑ **The agent** -> **Value**: `ID del carrito activo`
+2.  **Key**: `productId` -> ☑ **The agent** -> **Value**: `ID del producto a agregar`
+3.  **Key**: `qty` -> ☑ **The agent** -> **Value**: `Cantidad a agregar (número)`
+
+---
+
+### Action 4: Get Cart
+*   **Name**: `get_cart`
+*   **Description**: `Obtiene el contenido actual del carrito y el total a pagar.`
+*   **URL**: `https://laburen-challenge.sferrari.workers.dev/cart/get`
+*   **Method**: `POST`
+*   **Permissions**: Desmarcar "Requires administrator approval".
+
+**Body Parameters:**
+1.  **Key**: `cartId` -> ☑ **The agent** -> **Value**: `ID del carrito activo`
+
+---
+
+### Action 5: Update Cart Item
+*   **Name**: `update_cart_item`
+*   **Description**: `Modifica la cantidad de un producto o lo elimina (si qty=0).`
+*   **URL**: `https://laburen-challenge.sferrari.workers.dev/cart/update`
+*   **Method**: `POST`
+*   **Permissions**: Desmarcar "Requires administrator approval".
+
+**Body Parameters:**
+1.  **Key**: `cartId` -> ☑ **The agent** -> **Value**: `ID del carrito activo`
+2.  **Key**: `productId` -> ☑ **The agent** -> **Value**: `ID del producto a modificar`
+3.  **Key**: `qty` -> ☑ **The agent** -> **Value**: `Nueva cantidad exacta (0 para eliminar)`
+
+---
+
+### Action 6: Derivar a Humano
+*   **Type**: Request Assistance
+*   **Description**: User can request a human operator.
+*   (Simplemente selecciona esta opción en el menú "Add Action").
